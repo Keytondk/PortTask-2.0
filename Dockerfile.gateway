@@ -1,26 +1,17 @@
 # Build stage
 FROM golang:1.22-alpine AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates
 
-# Copy go.work for workspace support
-COPY go.work ./
+# Copy the entire project to handle go.work
+COPY . .
 
-# Copy pkg module first (shared dependency)
-COPY pkg/ ./pkg/
+WORKDIR /build/services/gateway
 
-# Copy gateway service
-COPY services/gateway/ ./services/gateway/
-
-WORKDIR /app/services/gateway
-
-# Download dependencies
-RUN go mod download
-
-# Build binary
+# Build binary using the workspace
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /gateway ./cmd/main.go
 
 # Runtime stage
