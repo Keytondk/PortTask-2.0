@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-app
+  namespace: navo
+  labels:
+    app: portal-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: portal-app
+  template:
+    metadata:
+      labels:
+        app: portal-app
+    spec:
+      containers:
+        - name: portal-app
+          image: navo/portal-app:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://api.navo.io"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal-app
+  namespace: navo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    app: portal-app

@@ -1,0 +1,39 @@
+# Fly.io configuration for Navo Core Service
+# Deploy with: fly launch --no-deploy && fly deploy
+
+app = "navo-api"
+primary_region = "sin"  # Singapore - adjust based on your users
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  GO_ENV = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# Health check
+[checks]
+  [checks.health]
+    port = 8080
+    type = "http"
+    interval = "15s"
+    timeout = "2s"
+    path = "/health"

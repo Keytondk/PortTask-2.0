@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realtime
+  namespace: navo
+  labels:
+    app: realtime
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: realtime
+  template:
+    metadata:
+      labels:
+        app: realtime
+    spec:
+      containers:
+        - name: realtime
+          image: navo/realtime:latest
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - configMapRef:
+                name: navo-config
+            - secretRef:
+                name: navo-secrets
+          env:
+            - name: SERVICE_NAME
+              value: "realtime"
+            - name: PORT
+              value: "8084"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: realtime
+  namespace: navo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8084
+  selector:
+    app: realtime

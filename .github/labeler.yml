@@ -1,0 +1,117 @@
+# Frontend apps
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/**/*'
+
+app-key:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/key/**/*'
+
+app-portal:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/portal/**/*'
+
+app-vendor:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/vendor/**/*'
+
+app-www:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/www/**/*'
+
+# Backend services
+backend:
+  - changed-files:
+      - any-glob-to-any-file: 'services/**/*'
+
+service-gateway:
+  - changed-files:
+      - any-glob-to-any-file: 'services/gateway/**/*'
+
+service-core:
+  - changed-files:
+      - any-glob-to-any-file: 'services/core/**/*'
+
+service-auth:
+  - changed-files:
+      - any-glob-to-any-file: 'services/auth/**/*'
+
+service-vessel:
+  - changed-files:
+      - any-glob-to-any-file: 'services/vessel/**/*'
+
+service-notification:
+  - changed-files:
+      - any-glob-to-any-file: 'services/notification/**/*'
+
+service-realtime:
+  - changed-files:
+      - any-glob-to-any-file: 'services/realtime/**/*'
+
+service-analytics:
+  - changed-files:
+      - any-glob-to-any-file: 'services/analytics/**/*'
+
+service-worker:
+  - changed-files:
+      - any-glob-to-any-file: 'services/worker/**/*'
+
+service-integration:
+  - changed-files:
+      - any-glob-to-any-file: 'services/integration/**/*'
+
+# Packages
+packages:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/**/*'
+
+database:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/db/**/*'
+
+ui-components:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/ui/**/*'
+
+# Infrastructure
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+          - 'docker-compose*.yml'
+          - 'Dockerfile*'
+          - '*.toml'
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**/*'
+
+# Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.json'
+          - '*.yaml'
+          - '*.yml'
+          - '.env*'
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.test.*'
+          - '**/*.spec.*'
+          - '**/tests/**/*'
+          - '**/__tests__/**/*'
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'pnpm-lock.yaml'
+          - 'go.mod'
+          - 'go.sum'

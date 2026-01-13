@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+  namespace: navo
+  labels:
+    app: core
+    app.kubernetes.io/name: navo
+    app.kubernetes.io/component: core
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      containers:
+        - name: core
+          image: navo/core:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+              name: http
+            - containerPort: 9091
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: navo-config
+            - secretRef:
+                name: navo-secrets
+          env:
+            - name: SERVICE_NAME
+              value: "core"
+            - name: PORT
+              value: "8081"
+            - name: DB_HOST
+              value: "postgres-primary.navo.svc.cluster.local"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "navo"
+            - name: DB_SSL_MODE
+              value: "require"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core
+  namespace: navo
+  labels:
+    app: core
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8081
+      protocol: TCP
+      name: http
+  selector:
+    app: core

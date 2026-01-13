@@ -1,0 +1,186 @@
+/**
+ * Navo Design System - Unified Global Styles
+ * 
+ * Import in each app's globals.css:
+ * @import '@navo/design-tokens/globals.css';
+ * 
+ * Or copy these CSS variables to maintain consistency.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ================================
+       NAVO BRAND COLORS
+       Navy (Trust) + Teal (Ocean) + Gold (Premium)
+       ================================ */
+    
+    /* Core Brand - Navy */
+    --navo-navy-50: 239 246 255;
+    --navo-navy-100: 219 234 254;
+    --navo-navy-500: 30 64 175;
+    --navo-navy-600: 30 58 138;
+    --navo-navy-900: 15 23 42;
+    
+    /* Secondary - Teal */
+    --navo-teal-50: 240 253 250;
+    --navo-teal-500: 13 148 136;
+    --navo-teal-600: 15 118 110;
+    
+    /* Accent - Gold */
+    --navo-gold-50: 255 251 235;
+    --navo-gold-500: 217 119 6;
+    --navo-gold-600: 180 83 9;
+    
+    /* ================================
+       SEMANTIC TOKENS (shadcn/ui compatible)
+       ================================ */
+    
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Primary - Navy Blue */
+    --primary: 224 76% 40%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* Secondary - Soft Gray */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    /* Accent - Teal */
+    --accent: 173 58% 39%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Success */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    /* Info */
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 224 76% 40%;
+    
+    --radius: 0.5rem;
+    
+    /* Chart colors for analytics */
+    --chart-1: 224 76% 40%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 173 58% 39%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Navo-specific utility classes */
+@layer utilities {
+  .text-gradient-ocean {
+    @apply bg-gradient-to-r from-[hsl(224,76%,40%)] to-[hsl(173,58%,39%)] bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-ocean {
+    @apply bg-gradient-to-r from-[hsl(224,76%,40%)] to-[hsl(173,58%,39%)];
+  }
+  
+  .bg-gradient-sunset {
+    @apply bg-gradient-to-r from-[hsl(38,92%,50%)] to-[hsl(224,76%,40%)];
+  }
+}
+
+/* Custom scrollbar - consistent across apps */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Focus visible styles for accessibility */
+:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}

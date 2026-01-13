@@ -1,0 +1,44 @@
+# Simplified single-container development mode
+# Run: docker-compose -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # All-in-one backend for simple local dev
+  navo-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: navo-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/navo?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-min-32-characters-long
+      - MODE=monolith
+    volumes:
+      - ./services:/app/services:ro
+      - ./pkg:/app/pkg:ro
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: navo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

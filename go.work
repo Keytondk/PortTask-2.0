@@ -1,0 +1,15 @@
+go 1.22
+
+use (
+    ./pkg
+    ./services/gateway
+    ./services/auth
+    ./services/core
+    ./services/vessel
+    ./services/vendor
+    ./services/realtime
+    ./services/notification
+    ./services/analytics
+    ./services/integration
+    ./services/worker
+)

@@ -1,0 +1,140 @@
+# Navo Maritime Platform - Local Development
+# Run: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: navo-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: navo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: navo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    container_name: navo-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/navo?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-min32chars}
+      - CORE_SERVICE_URL=http://core:8081
+      - VESSEL_SERVICE_URL=http://vessel:8082
+      - REALTIME_SERVICE_URL=http://realtime:8083
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Core Service
+  core:
+    build:
+      context: .
+      dockerfile: services/core/Dockerfile
+    container_name: navo-core
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/navo?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-min32chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Vessel Service
+  vessel:
+    build:
+      context: .
+      dockerfile: services/vessel/Dockerfile
+    container_name: navo-vessel
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/navo?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - AIS_API_KEY=${AIS_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Realtime Service (WebSocket)
+  realtime:
+    build:
+      context: .
+      dockerfile: services/realtime/Dockerfile
+    container_name: navo-realtime
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-min32chars}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Notification Service
+  notification:
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+    container_name: navo-notification
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/navo?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - EMAIL_API_KEY=${EMAIL_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: navo-network

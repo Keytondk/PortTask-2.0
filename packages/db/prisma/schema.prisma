@@ -1,0 +1,708 @@
+// ===========================================
+// Navo Database Schema
+// ===========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------
+// Organization
+// -----------------------------
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // operator, customer, vendor, agent
+  status    String   @default("active")
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  workspaces Workspace[]
+  vendors    Vendor[]
+  agents     Agent[]
+
+  @@map("organizations")
+}
+
+// -----------------------------
+// User
+// -----------------------------
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  organizationId String
+  roles          Json      @default("[]")
+  status         String    @default("active")
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  portCallsCreated   PortCall[]     @relation("PortCallCreatedBy")
+  serviceOrders      ServiceOrder[] @relation("ServiceOrderCreatedBy")
+  rfqs               RFQ[]          @relation("RFQCreatedBy")
+  incidentsCreated   Incident[]     @relation("IncidentCreatedBy")
+  incidentsAssigned  Incident[]     @relation("IncidentAssignedTo")
+  documentsUploaded  Document[]
+  notifications      Notification[]
+  messages           Message[]
+  automationRules    AutomationRule[]
+  workspaces         UserWorkspace[]
+
+  @@map("users")
+}
+
+// -----------------------------
+// User Workspace (Junction Table)
+// -----------------------------
+// Many-to-many relationship between users and workspaces
+// Controls which workspaces a user can access within their organization
+
+model UserWorkspace {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        String   @default("operator") // admin, operator, viewer
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("user_workspaces")
+}
+
+// -----------------------------
+// Workspace
+// -----------------------------
+
+model Workspace {
+  id             String   @id @default(cuid())
+  name           String
+  organizationId String
+  type           String   // customer, project, internal
+  status         String   @default("active")
+  settings       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  vessels   Vessel[]
+  portCalls PortCall[]
+  users     UserWorkspace[]
+
+  @@map("workspaces")
+}
+
+// -----------------------------
+// Vessel
+// -----------------------------
+
+model Vessel {
+  id          String   @id @default(cuid())
+  name        String
+  imo         String?  @unique
+  mmsi        String?
+  flag        String?
+  type        String
+  details     Json     @default("{}")
+  workspaceId String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  positions VesselPosition[]
+  portCalls PortCall[]
+  incidents Incident[]
+
+  @@map("vessels")
+}
+
+model VesselPosition {
+  id          String    @id @default(cuid())
+  vesselId    String
+  latitude    Decimal   @db.Decimal(10, 7)
+  longitude   Decimal   @db.Decimal(10, 7)
+  heading     Decimal?  @db.Decimal(5, 2)
+  speed       Decimal?  @db.Decimal(5, 2)
+  destination String?
+  eta         DateTime?
+  recordedAt  DateTime  @default(now())
+
+  vessel Vessel @relation(fields: [vesselId], references: [id])
+
+  @@index([vesselId, recordedAt(sort: Desc)])
+  @@map("vessel_positions")
+}
+
+// -----------------------------
+// Port
+// -----------------------------
+
+model Port {
+  id         String   @id @default(cuid())
+  name       String
+  unlocode   String   @unique
+  country    String
+  latitude   Decimal  @db.Decimal(10, 7)
+  longitude  Decimal  @db.Decimal(10, 7)
+  timezone   String
+  facilities Json     @default("[]")
+  status     String   @default("active")
+
+  portCalls PortCall[]
+
+  @@map("ports")
+}
+
+// -----------------------------
+// Port Call
+// -----------------------------
+
+model PortCall {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  vesselId    String
+  portId      String
+  workspaceId String
+  status      String   @default("draft")
+
+  eta              DateTime?
+  etd              DateTime?
+  ata              DateTime?
+  atd              DateTime?
+  berthName        String?
+  berthTerminal    String?
+  berthConfirmedAt DateTime?
+
+  agentId String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vessel    Vessel    @relation(fields: [vesselId], references: [id])
+  port      Port      @relation(fields: [portId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  creator   User      @relation("PortCallCreatedBy", fields: [createdBy], references: [id])
+
+  serviceOrders  ServiceOrder[]
+  rfqs           RFQ[]
+  documents      Document[]
+  incidents      Incident[]
+  messages       Message[]
+  timelineEvents PortCallTimeline[]
+
+  @@index([vesselId])
+  @@index([portId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([eta])
+  @@map("port_calls")
+}
+
+// -----------------------------
+// Port Call Timeline
+// -----------------------------
+
+model PortCallTimeline {
+  id          String   @id @default(cuid())
+  portCallId  String
+  eventType   String   // created, status_changed, berth_confirmed, eta_updated, etc.
+  title       String
+  description String?
+  oldValue    String?
+  newValue    String?
+  metadata    Json?
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  portCall PortCall @relation(fields: [portCallId], references: [id], onDelete: Cascade)
+
+  @@index([portCallId])
+  @@index([createdAt(sort: Desc)])
+  @@map("port_call_timeline")
+}
+
+// -----------------------------
+// Service Type
+// -----------------------------
+
+model ServiceType {
+  id                    String   @id @default(cuid())
+  name                  String
+  category              String
+  description           String?
+  defaultSpecifications Json     @default("{}")
+  status                String   @default("active")
+
+  serviceOrders ServiceOrder[]
+  rfqs          RFQ[]
+
+  @@map("service_types")
+}
+
+// -----------------------------
+// Service Order
+// -----------------------------
+
+model ServiceOrder {
+  id            String   @id @default(cuid())
+  portCallId    String
+  serviceTypeId String
+  status        String   @default("draft")
+
+  description    String?
+  quantity       Decimal? @db.Decimal(10, 2)
+  unit           String?
+  specifications Json     @default("{}")
+
+  requestedDate DateTime?
+  confirmedDate DateTime?
+  completedDate DateTime?
+
+  vendorId String?
+
+  quotedPrice Decimal? @db.Decimal(12, 2)
+  finalPrice  Decimal? @db.Decimal(12, 2)
+  currency    String   @default("USD")
+
+  rfqId String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portCall    PortCall    @relation(fields: [portCallId], references: [id])
+  serviceType ServiceType @relation(fields: [serviceTypeId], references: [id])
+  creator     User        @relation("ServiceOrderCreatedBy", fields: [createdBy], references: [id])
+
+  documents Document[]
+  incidents Incident[]
+
+  @@index([portCallId])
+  @@index([vendorId])
+  @@index([status])
+  @@map("service_orders")
+}
+
+// -----------------------------
+// RFQ
+// -----------------------------
+
+model RFQ {
+  id              String   @id @default(cuid())
+  reference       String   @unique
+  serviceTypeId   String
+  portCallId      String
+  status          String   @default("draft")
+
+  description  String?
+  quantity     Decimal? @db.Decimal(10, 2)
+  unit         String?
+  specifications Json    @default("{}")
+  deliveryDate DateTime?
+
+  deadline DateTime
+
+  invitedVendors String[] @default([])
+
+  awardedQuoteId String?
+  awardedAt      DateTime?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  serviceType ServiceType @relation(fields: [serviceTypeId], references: [id])
+  portCall    PortCall    @relation(fields: [portCallId], references: [id])
+  creator     User        @relation("RFQCreatedBy", fields: [createdBy], references: [id])
+
+  quotes Quote[]
+
+  @@index([portCallId])
+  @@index([status])
+  @@index([deadline])
+  @@map("rfqs")
+}
+
+// -----------------------------
+// Quote
+// -----------------------------
+
+model Quote {
+  id       String @id @default(cuid())
+  rfqId    String
+  vendorId String
+  status   String @default("submitted")
+
+  unitPrice  Decimal @db.Decimal(12, 2)
+  totalPrice Decimal @db.Decimal(12, 2)
+  currency   String  @default("USD")
+
+  paymentTerms String?
+  deliveryDate DateTime?
+  validUntil   DateTime?
+
+  notes       String?
+  attachments Json    @default("[]")
+
+  submittedAt DateTime @default(now())
+
+  rfq RFQ @relation(fields: [rfqId], references: [id])
+
+  @@index([rfqId])
+  @@index([vendorId])
+  @@map("quotes")
+}
+
+// -----------------------------
+// Vendor
+// -----------------------------
+
+model Vendor {
+  id             String   @id @default(cuid())
+  name           String
+  organizationId String
+
+  registrationNumber String?
+  address            Json    @default("{}")
+  contacts           Json    @default("[]")
+  bankDetails        Json    @default("{}")
+
+  serviceTypes   String[] @default([])
+  ports          String[] @default([])
+  certifications Json     @default("[]") // Uploaded certification documents
+
+  rating         Decimal @default(0) @db.Decimal(3, 2)
+  totalOrders    Int     @default(0)
+  onTimeDelivery Decimal @default(0) @db.Decimal(5, 2)
+  responseTime   Decimal @default(0) @db.Decimal(5, 2)
+
+  status String @default("pending") // pending, active, suspended
+
+  // Badge System
+  isVerified  Boolean   @default(false) // Email confirmed, company details validated
+  verifiedAt  DateTime?
+  isCertified Boolean   @default(false) // Documents uploaded & reviewed by Navo
+  certifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization        @relation(fields: [organizationId], references: [id])
+  operatorLists OperatorVendorList[]
+  invitations   VendorInvitation[]  @relation("InvitedVendor")
+
+  @@map("vendors")
+}
+
+// -----------------------------
+// Operator Vendor List
+// -----------------------------
+// Junction table connecting operators to their approved vendor networks
+
+model OperatorVendorList {
+  id              String   @id @default(cuid())
+  operatorOrgId   String   // The operator organization
+  vendorId        String   // The vendor
+
+  status          String   @default("active") // active, suspended, removed
+  addedBy         String   // User who added the vendor
+  notes           String?  // Internal notes about this vendor
+
+  preferenceRank  Int?     // Optional ranking for preferred vendors
+  serviceTypes    String[] @default([]) // Which service types this vendor is approved for
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@unique([operatorOrgId, vendorId])
+  @@index([operatorOrgId])
+  @@index([vendorId])
+  @@map("operator_vendor_lists")
+}
+
+// -----------------------------
+// Vendor Invitation
+// -----------------------------
+// Tracks invitations sent to vendors by operators
+
+model VendorInvitation {
+  id              String   @id @default(cuid())
+  operatorOrgId   String   // The operator organization inviting
+  invitedEmail    String   // Email address invited
+
+  // If vendor already exists (email match)
+  existingVendorId String?
+
+  // Invitation details
+  status          String   @default("pending") // pending, accepted, expired, cancelled
+  token           String   @unique @default(cuid()) // Unique token for invitation link
+
+  invitedBy       String   // User who sent the invitation
+  message         String?  // Optional message to vendor
+
+  expiresAt       DateTime // When the invitation expires
+  acceptedAt      DateTime?
+
+  // Service types the operator wants to use this vendor for
+  serviceTypes    String[] @default([])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  existingVendor Vendor? @relation("InvitedVendor", fields: [existingVendorId], references: [id])
+
+  @@index([operatorOrgId])
+  @@index([invitedEmail])
+  @@index([token])
+  @@index([status])
+  @@map("vendor_invitations")
+}
+
+// -----------------------------
+// Agent
+// -----------------------------
+
+model Agent {
+  id             String @id @default(cuid())
+  name           String
+  organizationId String
+
+  address  Json @default("{}")
+  contacts Json @default("[]")
+
+  ports    String[] @default([])
+  services String[] @default([])
+
+  rating       Decimal @default(0) @db.Decimal(3, 2)
+  totalCalls   Int     @default(0)
+  responseTime Decimal @default(0) @db.Decimal(5, 2)
+
+  status String @default("active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("agents")
+}
+
+// -----------------------------
+// Document
+// -----------------------------
+
+model Document {
+  id         String @id @default(cuid())
+  name       String
+  type       String
+  entityType String
+  entityId   String
+
+  fileUrl  String
+  fileSize Int?
+  mimeType String?
+
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+
+  uploader User @relation(fields: [uploadedBy], references: [id])
+
+  portCall     PortCall?     @relation(fields: [entityId], references: [id], map: "document_port_call_fk")
+  serviceOrder ServiceOrder? @relation(fields: [entityId], references: [id], map: "document_service_order_fk")
+
+  @@index([entityType, entityId])
+  @@map("documents")
+}
+
+// -----------------------------
+// Incident
+// -----------------------------
+
+model Incident {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+
+  priority String @default("medium")
+  status   String @default("open")
+
+  portCallId     String?
+  vesselId       String?
+  serviceOrderId String?
+
+  assignedTo String?
+
+  timeline Json @default("[]")
+
+  resolvedAt DateTime?
+  resolution String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portCall     PortCall?     @relation(fields: [portCallId], references: [id])
+  vessel       Vessel?       @relation(fields: [vesselId], references: [id])
+  serviceOrder ServiceOrder? @relation(fields: [serviceOrderId], references: [id])
+  creator      User          @relation("IncidentCreatedBy", fields: [createdBy], references: [id])
+  assignee     User?         @relation("IncidentAssignedTo", fields: [assignedTo], references: [id])
+
+  @@map("incidents")
+}
+
+// -----------------------------
+// Notification
+// -----------------------------
+
+model Notification {
+  id       String @id @default(cuid())
+  userId   String
+  type     String
+  title    String
+  message  String
+
+  data     Json    @default("{}")
+  link     String?
+  channels Json    @default("[\"in_app\"]")
+
+  readAt    DateTime?
+  sentAt    DateTime  @default(now())
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// -----------------------------
+// Message
+// -----------------------------
+
+model Message {
+  id          String @id @default(cuid())
+  channelType String
+  channelId   String
+
+  senderId    String
+  content     String
+  attachments Json   @default("[]")
+
+  readBy Json @default("[]")
+
+  createdAt DateTime @default(now())
+
+  sender   User      @relation(fields: [senderId], references: [id])
+  portCall PortCall? @relation(fields: [channelId], references: [id])
+
+  @@index([channelType, channelId])
+  @@index([createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+// -----------------------------
+// Automation Rule
+// -----------------------------
+
+model AutomationRule {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  triggerEvent      String
+  triggerConditions Json   @default("[]")
+
+  actions Json @default("[]")
+
+  status String @default("draft")
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creator User @relation(fields: [createdBy], references: [id])
+
+  @@map("automation_rules")
+}
+
+// -----------------------------
+// Audit Log
+// -----------------------------
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  userId         String
+  organizationId String
+  workspaceId    String?
+
+  action     String // CREATE, READ, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entityType String // user, organization, workspace, vessel, port_call, etc.
+  entityId   String
+
+  oldValue Json? // Previous state (for updates)
+  newValue Json? // New state (for creates/updates)
+  metadata Json? // Additional context data
+
+  ipAddress    String?
+  userAgent    String?
+  requestId    String?
+  status       String  @default("success") // success, failure
+  errorMessage String?
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([timestamp(sort: Desc)])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// -----------------------------
+// Feature Flag
+// -----------------------------
+
+model FeatureFlag {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  description String?
+
+  defaultValue Boolean @default(false)
+
+  // Override lists - these IDs get the opposite of defaultValue
+  enabledOrganizations  String[] @default([])
+  disabledOrganizations String[] @default([])
+  enabledWorkspaces     String[] @default([])
+  disabledWorkspaces    String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("feature_flags")
+}

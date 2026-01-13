@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: navo-config
+  namespace: navo
+data:
+  NODE_ENV: "production"
+  API_URL: "https://api.navo.io"
+  LOG_LEVEL: "info"
+  REDIS_HOST: "redis-master.navo.svc.cluster.local"
+  REDIS_PORT: "6379"

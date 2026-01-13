@@ -1,0 +1,126 @@
+/**
+ * Navo Portal App - Global Styles
+ * Customer-facing portal using unified Navo design tokens
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Navo Brand Colors */
+    --navo-navy: 224 76% 40%;
+    --navo-teal: 173 58% 39%;
+    --navo-gold: 38 92% 50%;
+
+    /* Semantic Tokens */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary - Navy (Trust) */
+    --primary: 224 76% 40%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent - Teal (Ocean) */
+    --accent: 173 58% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* UI Elements */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 224 76% 40%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 173 58% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}

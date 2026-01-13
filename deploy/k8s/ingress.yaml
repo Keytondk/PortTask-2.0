@@ -1,0 +1,94 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: navo-ingress
+  namespace: navo
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  tls:
+    - hosts:
+        - app.navo.io
+        - portal.navo.io
+        - vendor.navo.io
+        - api.navo.io
+      secretName: navo-tls
+  rules:
+    # Main application
+    - host: app.navo.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: key-app
+                port:
+                  number: 80
+    # Customer portal
+    - host: portal.navo.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-app
+                port:
+                  number: 80
+    # Vendor portal
+    - host: vendor.navo.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vendor-app
+                port:
+                  number: 80
+    # API Gateway
+    - host: api.navo.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 80
+---
+# WebSocket-specific ingress for real-time features
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: navo-ws-ingress
+  namespace: navo
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "realtime"
+spec:
+  tls:
+    - hosts:
+        - ws.navo.io
+      secretName: navo-ws-tls
+  rules:
+    - host: ws.navo.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: realtime
+                port:
+                  number: 80

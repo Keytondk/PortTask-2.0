@@ -1,0 +1,293 @@
+openapi: 3.1.0
+info:
+  title: Navo Maritime Operations API
+  description: |
+    The Navo Maritime Operations API provides programmatic access to maritime operations management,
+    including port calls, vessel tracking, service ordering, and vendor management.
+
+    ## Authentication
+    All API requests require authentication using JWT tokens.
+
+    ## Rate Limiting
+    API requests are rate-limited to 1000 requests per minute per organization.
+  version: 1.0.0
+  contact:
+    name: Navo API Support
+    email: api-support@navo.io
+
+servers:
+  - url: https://api.navo.io/v1
+    description: Production server
+  - url: https://api.staging.navo.io/v1
+    description: Staging server
+
+tags:
+  - name: Authentication
+  - name: Port Calls
+  - name: Vessels
+  - name: Services
+  - name: RFQs
+  - name: Vendors
+  - name: Documents
+
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      security: []
+      responses:
+        '200':
+          description: Login successful
+
+  /port-calls:
+    get:
+      tags: [Port Calls]
+      summary: List port calls
+      responses:
+        '200':
+          description: List of port calls
+    post:
+      tags: [Port Calls]
+      summary: Create port call
+      responses:
+        '201':
+          description: Port call created
+
+  /port-calls/{id}:
+    get:
+      tags: [Port Calls]
+      summary: Get port call
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Port call details
+    put:
+      tags: [Port Calls]
+      summary: Update port call
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Port call updated
+    delete:
+      tags: [Port Calls]
+      summary: Cancel port call
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Port call cancelled
+
+  /vessels:
+    get:
+      tags: [Vessels]
+      summary: List vessels
+      responses:
+        '200':
+          description: List of vessels
+    post:
+      tags: [Vessels]
+      summary: Add vessel
+      responses:
+        '201':
+          description: Vessel created
+
+  /vessels/{id}:
+    get:
+      tags: [Vessels]
+      summary: Get vessel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vessel details
+
+  /vessels/{id}/position:
+    get:
+      tags: [Vessels]
+      summary: Get vessel AIS position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vessel position
+
+  /services:
+    get:
+      tags: [Services]
+      summary: List service orders
+      responses:
+        '200':
+          description: List of services
+    post:
+      tags: [Services]
+      summary: Create service order
+      responses:
+        '201':
+          description: Service created
+
+  /services/{id}:
+    get:
+      tags: [Services]
+      summary: Get service order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service details
+
+  /rfqs:
+    get:
+      tags: [RFQs]
+      summary: List RFQs
+      responses:
+        '200':
+          description: List of RFQs
+    post:
+      tags: [RFQs]
+      summary: Create RFQ
+      responses:
+        '201':
+          description: RFQ created
+
+  /rfqs/{id}:
+    get:
+      tags: [RFQs]
+      summary: Get RFQ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: RFQ details
+
+  /rfqs/{id}/quotes:
+    get:
+      tags: [RFQs]
+      summary: Get quotes for RFQ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of quotes
+
+  /rfqs/{id}/award:
+    post:
+      tags: [RFQs]
+      summary: Award RFQ to vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: RFQ awarded
+
+  /vendors:
+    get:
+      tags: [Vendors]
+      summary: List vendors
+      responses:
+        '200':
+          description: List of vendors
+
+  /vendors/{id}:
+    get:
+      tags: [Vendors]
+      summary: Get vendor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor details
+
+  /documents:
+    get:
+      tags: [Documents]
+      summary: List documents
+      responses:
+        '200':
+          description: List of documents
+    post:
+      tags: [Documents]
+      summary: Upload document
+      responses:
+        '201':
+          description: Document uploaded
+
+  /documents/{id}:
+    get:
+      tags: [Documents]
+      summary: Get document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document details
+
+  /documents/{id}/download:
+    get:
+      tags: [Documents]
+      summary: Download document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download URL
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

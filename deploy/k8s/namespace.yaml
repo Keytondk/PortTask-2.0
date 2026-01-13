@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: navo
+  labels:
+    app.kubernetes.io/name: navo
+    app.kubernetes.io/managed-by: kubectl
