@@ -47,3 +47,4 @@ coverage
 *.pem
 .vercel
 .netlify
+.env*.local
