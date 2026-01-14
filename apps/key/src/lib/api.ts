@@ -178,6 +178,99 @@ class ApiClient {
       }
     );
   }
+
+  // RFQs
+  async getRFQs(params?: {
+    page?: number;
+    per_page?: number;
+    port_call_id?: string;
+    service_type_id?: string;
+    status?: string;
+  }) {
+    return this.request<{
+      data: RFQ[];
+      meta: { total: number; page: number; per_page: number };
+    }>('/rfqs', {
+      params: params as Record<string, string>,
+    });
+  }
+
+  async getRFQ(id: string) {
+    return this.request<{ data: RFQ }>(`/rfqs/${id}`);
+  }
+
+  async createRFQ(input: CreateRFQInput) {
+    return this.request<{ data: RFQ }>('/rfqs', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updateRFQ(id: string, input: UpdateRFQInput) {
+    return this.request<{ data: RFQ }>(`/rfqs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async publishRFQ(id: string) {
+    return this.request<{ data: RFQ }>(`/rfqs/${id}/publish`, {
+      method: 'POST',
+    });
+  }
+
+  async closeRFQ(id: string) {
+    return this.request<{ data: RFQ }>(`/rfqs/${id}/close`, {
+      method: 'POST',
+    });
+  }
+
+  async cancelRFQ(id: string, reason?: string) {
+    return this.request<{ data: RFQ }>(`/rfqs/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getRFQQuotes(rfqId: string) {
+    return this.request<{ data: Quote[] }>(`/rfqs/${rfqId}/quotes`);
+  }
+
+  async compareRFQQuotes(rfqId: string) {
+    return this.request<{ data: QuoteComparison }>(`/rfqs/${rfqId}/compare`);
+  }
+
+  async awardQuote(rfqId: string, quoteId: string) {
+    return this.request<{ data: RFQ }>(`/rfqs/${rfqId}/award`, {
+      method: 'POST',
+      body: JSON.stringify({ quote_id: quoteId }),
+    });
+  }
+
+  async submitQuote(rfqId: string, input: SubmitQuoteInput) {
+    return this.request<{ data: Quote }>(`/rfqs/${rfqId}/quotes`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  // Vendors
+  async getVendors(params?: {
+    page?: number;
+    per_page?: number;
+    service_type_id?: string;
+  }) {
+    return this.request<{
+      data: Vendor[];
+      meta: { total: number; page: number; per_page: number };
+    }>('/vendors', {
+      params: params as Record<string, string>,
+    });
+  }
+
+  async getVendor(id: string) {
+    return this.request<{ data: Vendor }>(`/vendors/${id}`);
+  }
 }
 
 // Types
@@ -326,99 +419,7 @@ export interface UpdateServiceOrderInput {
   currency?: string;
 }
 
-  // RFQs
-  async getRFQs(params?: {
-    page?: number;
-    per_page?: number;
-    port_call_id?: string;
-    service_type_id?: string;
-    status?: string;
-  }) {
-    return this.request<{
-      data: RFQ[];
-      meta: { total: number; page: number; per_page: number };
-    }>('/rfqs', {
-      params: params as Record<string, string>,
-    });
-  }
 
-  async getRFQ(id: string) {
-    return this.request<{ data: RFQ }>(`/rfqs/${id}`);
-  }
-
-  async createRFQ(input: CreateRFQInput) {
-    return this.request<{ data: RFQ }>('/rfqs', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    });
-  }
-
-  async updateRFQ(id: string, input: UpdateRFQInput) {
-    return this.request<{ data: RFQ }>(`/rfqs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(input),
-    });
-  }
-
-  async publishRFQ(id: string) {
-    return this.request<{ data: RFQ }>(`/rfqs/${id}/publish`, {
-      method: 'POST',
-    });
-  }
-
-  async closeRFQ(id: string) {
-    return this.request<{ data: RFQ }>(`/rfqs/${id}/close`, {
-      method: 'POST',
-    });
-  }
-
-  async cancelRFQ(id: string, reason?: string) {
-    return this.request<{ data: RFQ }>(`/rfqs/${id}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
-  }
-
-  async getRFQQuotes(rfqId: string) {
-    return this.request<{ data: Quote[] }>(`/rfqs/${rfqId}/quotes`);
-  }
-
-  async compareRFQQuotes(rfqId: string) {
-    return this.request<{ data: QuoteComparison }>(`/rfqs/${rfqId}/compare`);
-  }
-
-  async awardQuote(rfqId: string, quoteId: string) {
-    return this.request<{ data: RFQ }>(`/rfqs/${rfqId}/award`, {
-      method: 'POST',
-      body: JSON.stringify({ quote_id: quoteId }),
-    });
-  }
-
-  async submitQuote(rfqId: string, input: SubmitQuoteInput) {
-    return this.request<{ data: Quote }>(`/rfqs/${rfqId}/quotes`, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    });
-  }
-
-  // Vendors
-  async getVendors(params?: {
-    page?: number;
-    per_page?: number;
-    service_type_id?: string;
-  }) {
-    return this.request<{
-      data: Vendor[];
-      meta: { total: number; page: number; per_page: number };
-    }>('/vendors', {
-      params: params as Record<string, string>,
-    });
-  }
-
-  async getVendor(id: string) {
-    return this.request<{ data: Vendor }>(`/vendors/${id}`);
-  }
-}
 
 // Vessel API Client
 class VesselApiClient extends ApiClient {
