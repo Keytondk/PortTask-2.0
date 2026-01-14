@@ -1,11 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar, MobileSidebar } from './sidebar';
 import { Header } from './header';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Skip AppShell for auth routes
+  const isAuthRoute = pathname?.startsWith('/login') ||
+    pathname?.startsWith('/register') ||
+    pathname?.startsWith('/invite') ||
+    pathname?.startsWith('/reset-password') ||
+    pathname?.startsWith('/forgot-password');
+
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
