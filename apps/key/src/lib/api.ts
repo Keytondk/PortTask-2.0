@@ -19,7 +19,7 @@ class ApiClient {
     this.baseUrl = url;
   }
 
-  private async request<T>(
+  protected async request<T>(
     endpoint: string,
     options: FetchOptions = {}
   ): Promise<T> {

@@ -152,53 +152,6 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     setIsConnected(false);
   }, []);
 
-  // Handle incoming messages
-  const handleMessage = useCallback(
-    (message: ServerMessage) => {
-      switch (message.type) {
-        case 'event':
-          if (message.event) {
-            handleEvent(message.event);
-          }
-          break;
-        case 'subscribed':
-          console.log('[Realtime] Subscribed to', message.channel);
-          break;
-        case 'unsubscribed':
-          console.log('[Realtime] Unsubscribed from', message.channel);
-          break;
-        case 'error':
-          console.error('[Realtime] Server error:', message.error);
-          setLastError(message.error || 'Unknown error');
-          break;
-        case 'heartbeat':
-          // Heartbeat received, connection is alive
-          break;
-        case 'connected':
-          console.log('[Realtime] Connection confirmed', message.data);
-          break;
-      }
-    },
-    [handleEvent]
-  );
-
-  // Handle a single event
-  const handleEvent = useCallback(
-    (event: RealtimeEvent) => {
-      // Call specific event handlers
-      const handlers = eventHandlers.current.get(event.type);
-      handlers?.forEach((handler) => handler(event));
-
-      // Call wildcard handlers
-      const wildcardHandlers = eventHandlers.current.get('*');
-      wildcardHandlers?.forEach((handler) => handler(event));
-
-      // Auto-invalidate relevant queries
-      invalidateQueriesForEvent(event);
-    },
-    [queryClient]
-  );
-
   // Auto-invalidate React Query cache based on event type
   const invalidateQueriesForEvent = useCallback(
     (event: RealtimeEvent) => {
@@ -244,6 +197,57 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     },
     [queryClient]
   );
+
+  // Handle a single event
+  const handleEvent = useCallback(
+    (event: RealtimeEvent) => {
+      // Call specific event handlers
+      const handlers = eventHandlers.current.get(event.type);
+      handlers?.forEach((handler) => handler(event));
+
+      // Call wildcard handlers
+      const wildcardHandlers = eventHandlers.current.get('*');
+      wildcardHandlers?.forEach((handler) => handler(event));
+
+      // Auto-invalidate relevant queries
+      invalidateQueriesForEvent(event);
+    },
+    [invalidateQueriesForEvent]
+  );
+
+  // Handle incoming messages
+  const handleMessage = useCallback(
+    (message: ServerMessage) => {
+      switch (message.type) {
+        case 'event':
+          if (message.event) {
+            handleEvent(message.event);
+          }
+          break;
+        case 'subscribed':
+          console.log('[Realtime] Subscribed to', message.channel);
+          break;
+        case 'unsubscribed':
+          console.log('[Realtime] Unsubscribed from', message.channel);
+          break;
+        case 'error':
+          console.error('[Realtime] Server error:', message.error);
+          setLastError(message.error || 'Unknown error');
+          break;
+        case 'heartbeat':
+          // Heartbeat received, connection is alive
+          break;
+        case 'connected':
+          console.log('[Realtime] Connection confirmed', message.data);
+          break;
+      }
+    },
+    [handleEvent]
+  );
+
+
+
+
 
   // Subscribe to a channel
   const subscribe = useCallback((channel: string) => {
