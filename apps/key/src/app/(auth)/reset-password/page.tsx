@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -25,7 +25,7 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -193,58 +193,50 @@ export default function ResetPasswordPage() {
                     </p>
                     <ul className="space-y-1 text-xs">
                       <li
-                        className={`flex items-center gap-2 ${
-                          hasMinLength
+                        className={`flex items-center gap-2 ${hasMinLength
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-400'
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            hasMinLength ? 'bg-green-500' : 'bg-slate-300'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${hasMinLength ? 'bg-green-500' : 'bg-slate-300'
+                            }`}
                         />
                         At least 12 characters
                       </li>
                       <li
-                        className={`flex items-center gap-2 ${
-                          hasUppercase
+                        className={`flex items-center gap-2 ${hasUppercase
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-400'
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            hasUppercase ? 'bg-green-500' : 'bg-slate-300'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${hasUppercase ? 'bg-green-500' : 'bg-slate-300'
+                            }`}
                         />
                         One uppercase letter
                       </li>
                       <li
-                        className={`flex items-center gap-2 ${
-                          hasLowercase
+                        className={`flex items-center gap-2 ${hasLowercase
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-400'
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            hasLowercase ? 'bg-green-500' : 'bg-slate-300'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${hasLowercase ? 'bg-green-500' : 'bg-slate-300'
+                            }`}
                         />
                         One lowercase letter
                       </li>
                       <li
-                        className={`flex items-center gap-2 ${
-                          hasNumber
+                        className={`flex items-center gap-2 ${hasNumber
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-400'
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            hasNumber ? 'bg-green-500' : 'bg-slate-300'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${hasNumber ? 'bg-green-500' : 'bg-slate-300'
+                            }`}
                         />
                         One number
                       </li>
@@ -311,5 +303,13 @@ export default function ResetPasswordPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
